@@ -1,0 +1,9 @@
+{
+  // Cloudflare Workers config: haikukiko.com is a static site served from this folder.
+  "name": "bold-mouse-93ac",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./",
+    "not_found_handling": "404-page"
+  }
+}
