@@ -1,0 +1,33 @@
+// Haiku Kiko data layer: everything editable lives in Supabase.
+const HK = (() => {
+  const SB = "https://uuycejeoptsgglhjeqvb.supabase.co";
+  const KEY = "sb_publishable_JvuFtdL65aEe5hrBmVr3pA_Ze4IgPWq";
+  const H = { apikey: KEY, Authorization: "Bearer " + KEY };
+  const dev = new URLSearchParams(location.search).has("dev");
+  async function get(path) {
+    const r = await fetch(SB + "/rest/v1/" + path, { headers: H });
+    if (!r.ok) throw new Error(path + " " + r.status);
+    return r.json();
+  }
+  async function rpc(fn, body) {
+    const r = await fetch(SB + "/rest/v1/rpc/" + fn, { method: "POST", headers: { ...H, "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    if (!r.ok) throw new Error(fn + " " + r.status);
+    return r.status === 204 ? null : r.json();
+  }
+  const live = dev ? "" : "&status=eq.live";
+  return {
+    dev,
+    q: dev ? "?dev" : "",
+    settings: async () => Object.fromEntries((await get("settings?select=key,value")).map(r => [r.key, r.value])),
+    sets: () => get("sets?select=*&order=sort.desc" + live),
+    set: async slug => (await get("sets?select=*&slug=eq." + encodeURIComponent(slug) + live))[0],
+    photos: slug => get("photos?select=*&set_slug=eq." + encodeURIComponent(slug) + live + "&order=n"),
+    galleryPhotos: slug => rpc("gallery_photos", { p_set: slug, p_dev: dev }),
+    styles: () => get("styles?select=*&active=eq.true&order=sort"),
+    options: async slug => { const [st, rows] = await Promise.all([get("styles?select=code&active=eq.true"), get("haiku_options?select=*&set_slug=eq." + encodeURIComponent(slug) + "&order=n,style")]); const ok = new Set(st.map(r => r.code)); return rows.filter(o => ok.has(o.style)); },
+    rpc,
+    esc: s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])),
+    pad: n => String(n).padStart(2, "0"),
+    slugFromPath: () => new URLSearchParams(location.search).get("s") || location.pathname.split("/").filter(Boolean)[0] || ""
+  };
+})();

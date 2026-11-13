@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Who voted for what · Haiku Kiko</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root { --ink:#0d131c; --raised:#141c28; --paper:#e8ecf2; --mist:#8b97a8; --line:#243041; --chaouen:#6f9cf0; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { background:var(--ink); color:var(--paper); font-family:'Instrument Serif', Georgia, serif; }
+.wrap { max-width: 1000px; margin: 0 auto; padding: 48px 16px 100px; }
+.mono { font-family:'DM Mono', monospace; font-size:12px; letter-spacing:.08em; color:var(--mist); }
+a { color: var(--mist); }
+h1 { font-weight:400; font-size: clamp(36px,7vw,60px); margin: 10px 0 18px; }
+.tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom: 14px; }
+.tabs a { font-family:'DM Mono', monospace; font-size: 13px; color: var(--mist); text-decoration:none; border:1px solid var(--line); border-radius:999px; padding: 8px 14px; }
+.tabs a.on { color: var(--ink); background: var(--paper); border-color: var(--paper); }
+.who { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin: 6px 0 4px; font-family:'DM Mono', monospace; font-size: 13px; color: var(--mist); }
+.who input { font-family:'DM Mono', monospace; font-size: 14px; background:none; border:1px solid var(--line); color: var(--paper); border-radius:999px; padding: 8px 14px; width: 10em; }
+.legend { display:flex; flex-wrap:wrap; gap: 8px; margin-top: 12px; }
+.chip { display:inline-flex; align-items:center; gap:6px; font-family:'DM Mono', monospace; font-size: 11px; border-radius: 999px; padding: 3px 9px 3px 7px; color: #0d131c; font-weight:500; }
+.chip::before { content:""; width:7px; height:7px; border-radius:50%; background: rgba(0,0,0,.35); }
+.photo { margin-top: 44px; display:grid; grid-template-columns: 220px 1fr; gap: 18px; align-items:start; }
+@media (max-width: 700px) { .photo { grid-template-columns: 1fr; } }
+.photo img { width:100%; height:auto; border-radius: 4px; display:block; background: var(--raised); }
+.photo h2 { font-weight:400; font-style: italic; font-size: 28px; margin: 8px 0 0; }
+.photo h2 .n { font-family:'DM Mono', monospace; font-style:normal; font-size: 13px; color: var(--chaouen); margin-right: 8px; }
+.lock { font-family:'DM Mono', monospace; font-size: 12px; color: var(--mist); margin-top: 6px; display:block; }
+.opts { display:grid; grid-template-columns: repeat(auto-fill, minmax(190px,1fr)); gap: 8px; }
+.opt { text-align:left; background: var(--raised); color: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; cursor:pointer; font: inherit; position: relative; }
+.opt .t { font-family:'DM Mono', monospace; font-size: 10.5px; letter-spacing:.06em; color: var(--mist); display:block; margin-bottom: 6px; }
+.opt .h { font-style: italic; font-size: 17px; line-height: 1.3; }
+.opt .h span { display:block; }
+.opt .chips { display:flex; flex-wrap:wrap; gap:4px; margin-top: 8px; min-height: 18px; }
+.opt.win { box-shadow: inset 0 0 0 1px var(--paper); }
+.opt.win .t::after { content: "  ★ showing"; color: var(--paper); }
+.share { margin-top: 10px; font-family:'DM Mono', monospace; font-size: 12px; color: var(--chaouen); background:none; border:1px solid var(--line); border-radius:999px; padding: 6px 12px; cursor:pointer; }
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--chaouen); color: var(--ink); font-family:'DM Mono', monospace; font-size: 13px; padding: 8px 14px; border-radius: 999px; opacity: 0; transition: opacity .3s; pointer-events:none; }
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="mono"><a href="/">← Haiku Kiko home</a> · <a href="/chefchaouen/">Day one</a> · <a href="/chefchaouen-2/">Day two</a> · votes</p>
+  <h1>Who voted for <em>what</em></h1>
+  <nav class="tabs" id="tabs"></nav>
+  <p class="who">Voting as <input id="me" type="text" maxlength="60" aria-label="Voting as"> — tap any haiku to move your vote there.</p>
+  <div class="legend" id="legend"></div>
+  <div id="photos"><p class="mono" style="margin-top:30px">Loading…</p></div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="/hk.js"></script>
+<script>
+(async () => {
+  const { esc, pad } = HK;
+  const params = new URLSearchParams(location.search);
+  const PALETTE = { gregory: "#6f9cf0", ilaria: "#e88aa6" };
+  const EXTRA = ["#e0b45c", "#7fcf9b", "#c39bf0", "#f08f6f", "#6fd6d6", "#d9d9d9"];
+  const colourOf = (() => { const m = {}; let i = 0; return n => { const k = n.toLowerCase(); return m[k] || (m[k] = PALETTE[k] || EXTRA[i++ % EXTRA.length]); }; })();
+  const me = document.getElementById("me");
+  me.value = params.get("as") || (() => { try { return localStorage.getItem("hk-name") || "Gregory"; } catch (e) { return "Gregory"; } })();
+  me.addEventListener("change", () => { try { localStorage.setItem("hk-name", me.value.trim()); } catch (e) {} load(); });
+  const toast = t => { const el = document.getElementById("toast"); el.textContent = t; el.classList.add("show"); setTimeout(() => el.classList.remove("show"), 2200); };
+  let sets; try { sets = await HK.sets(); } catch (e) { document.getElementById("photos").innerHTML = '<p class="mono" style="margin-top:30px">Couldn\'t reach the votes — try again in a moment.</p>'; return; }
+  const hp = location.hash.replace(/^#/, "").split("/");
+  let slug = (hp[0] && sets.some(x => x.slug === hp[0]) ? hp[0] : null) || params.get("s") || (sets[0] && sets[0].slug);
+  let focusPhoto = +hp[1] || +params.get("p") || 0;
+  document.getElementById("tabs").innerHTML = sets.map(s => `<a href="#${esc(s.slug)}" data-s="${esc(s.slug)}" class="${s.slug === slug ? "on" : ""}">${esc(s.title)} ${esc(s.title_em || "")}</a>`).join("");
+  document.querySelectorAll("#tabs a").forEach(a => a.onclick = e => { e.preventDefault(); slug = a.dataset.s; focusPhoto = 0; history.replaceState(null, "", location.pathname + "#" + slug); document.querySelectorAll("#tabs a").forEach(x => x.classList.toggle("on", x === a)); load(); });
+  async function load() {
+    const [set, photos, styleRows, optRows, detail] = await Promise.all([HK.set(slug), HK.galleryPhotos(slug), HK.styles(), HK.options(slug), HK.rpc("votes_detail", { p_set: slug })]);
+    const STY = Object.fromEntries(styleRows.map(r => [r.code, r.name]));
+    const names = [...new Set(detail.map(d => d.voter_name))];
+    if (me.value.trim() && !names.some(n => n.toLowerCase() === me.value.trim().toLowerCase())) names.push(me.value.trim());
+    document.getElementById("legend").innerHTML = names.map(n => `<span class="chip" style="background:${colourOf(n)}">${esc(n)}</span>`).join("");
+    const by = {}; detail.forEach(d => ((by[d.photo] = by[d.photo] || {})[d.style] = by[d.photo][d.style] || []).push(d.voter_name));
+    document.getElementById("photos").innerHTML = photos.map(p => {
+      const opts = optRows.filter(o => o.n === p.n);
+      return `<section class="photo" id="p-${p.n}"><div><img src="/thumbs/${esc(slug)}-${pad(p.n)}.jpg" alt="" loading="lazy" width="320" height="320"><h2><span class="n">${pad(p.n)}</span>${esc(p.name)}</h2>${p.locked ? '<span class="lock">🔒 locked</span>' : ""}<button type="button" class="share" data-n="${p.n}">🔗 share this photo</button></div>
+        <div class="opts">${opts.map(o => { const who = ((by[p.n] || {})[o.style] || []);
+          return `<button type="button" class="opt${p.style === o.style ? " win" : ""}" data-n="${p.n}" data-k="${o.style}" ${p.locked ? "disabled" : ""}><span class="t">${o.style} · ${esc(STY[o.style] || "")}</span><span class="h">${o.lines.map(l => "<span>" + esc(l) + "</span>").join("")}</span><span class="chips">${who.map(n => `<span class="chip" style="background:${colourOf(n)}">${esc(n)}</span>`).join("")}</span></button>`; }).join("")}</div></section>`;
+    }).join("");
+    document.querySelectorAll(".share").forEach(b => b.onclick = async () => {
+      const url = location.origin + location.pathname + "#" + slug + "/" + b.dataset.n;
+      history.replaceState(null, "", "#" + slug + "/" + b.dataset.n);
+      if (navigator.share) { try { await navigator.share({ url, title: "Vote on this haiku" }); return; } catch (e) { if (e && e.name === "AbortError") return; } }
+      try { await navigator.clipboard.writeText(url); toast("Link copied"); } catch (e) { toast(url); }
+    });
+    if (focusPhoto) { const el = document.getElementById("p-" + focusPhoto); if (el) { el.scrollIntoView({ block: "start" }); el.style.outline = "1px solid var(--chaouen)"; el.style.outlineOffset = "8px"; el.style.borderRadius = "6px"; } focusPhoto = 0; }
+    document.querySelectorAll(".opt").forEach(b => b.onclick = async () => {
+      const name = me.value.trim(); if (!name) { me.focus(); toast("Type your name first"); return; }
+      try { await HK.rpc("cast_vote_by_name", { p_set: slug, p_photo: +b.dataset.n, p_style: b.dataset.k, p_name: name }); toast("Vote moved — " + name); focusPhoto = +b.dataset.n; load(); }
+      catch (e) { toast("Couldn't save — try again"); }
+    });
+  }
+  addEventListener("hashchange", () => { const h = location.hash.replace(/^#/, "").split("/"); if (h[0] && sets.some(x => x.slug === h[0])) { slug = h[0]; focusPhoto = +h[1] || 0; document.querySelectorAll("#tabs a").forEach(x => x.classList.toggle("on", x.dataset.s === slug)); load(); } });
+  load();
+})();
+</script>
+</body>
+</html>

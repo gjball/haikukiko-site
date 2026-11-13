@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Haiku Kiko</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: one long scroll. Each photograph at full column width, its number, name and haiku set beneath it like a plate caption in a photobook. Single dark rain-blue theme so the photographs carry the colour. */
+:root {
+  --ink: #0e141c;          /* page: wet slate at dusk */
+  --ink-raised: #141c27;   /* placeholder fill */
+  --paper: #e9edf2;        /* main text */
+  --mist: #8a97a8;         /* secondary text, rules */
+  --chaouen: #6f9cf0;      /* Chefchaouen blue, numbers and accents */
+  --line: #253142;
+  --font-display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --font-body: "Newsreader", "Iowan Old Style", Georgia, serif;
+  --font-mono: "DM Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --col: 1080px;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-body);
+  font-weight: 300;
+  line-height: 1.5;
+}
+a { color: var(--chaouen); }
+:focus-visible { outline: 2px solid var(--chaouen); outline-offset: 3px; }
+
+.wrap { max-width: var(--col); margin: 0 auto; padding: 0 clamp(16px, 4vw, 40px); }
+
+/* Header */
+header.masthead { padding: clamp(56px, 10vw, 120px) 0 clamp(40px, 7vw, 80px); }
+.kicker {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mist);
+  margin: 0 0 18px;
+}
+h1 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(3rem, 9vw, 6.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.01em;
+  margin: 0;
+  text-wrap: balance;
+}
+h1 em { font-style: italic; color: var(--chaouen); }
+.intro {
+  max-width: 34em;
+  margin: 28px 0 0;
+  font-size: 1.15rem;
+  color: var(--mist);
+}
+
+/* Index strip */
+nav.index { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 14px 0; margin-bottom: clamp(48px, 8vw, 96px); }
+nav.index ol {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-wrap: wrap; gap: 6px 20px;
+  font-family: var(--font-mono); font-size: 0.8rem;
+}
+nav.index a { color: var(--mist); text-decoration: none; }
+nav.index a:hover, nav.index a:focus-visible { color: var(--paper); }
+nav.index b { color: var(--chaouen); font-weight: 500; margin-right: 6px; font-variant-numeric: tabular-nums; }
+
+/* Plates */
+.plates { display: grid; gap: clamp(40px, 7vw, 88px); padding-bottom: clamp(72px, 12vw, 140px); }
+figure.plate { margin: 0; scroll-margin-top: 24px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.frame { display: flex; justify-content: center; }
+.frame img {
+  display: block;
+  max-width: 100%;
+  max-height: 86vh;
+  width: auto; height: auto;
+  border-radius: 2px;
+  background: var(--ink-raised);
+}
+.placeholder {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background:
+    repeating-linear-gradient(115deg, transparent 0 14px, rgba(111,156,240,0.05) 14px 15px),
+    var(--ink-raised);
+  border: 1px solid var(--line);
+  display: grid; place-items: center;
+  font-family: var(--font-mono); font-size: 0.8rem; color: var(--mist);
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+figcaption {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: 12px 40px;
+  align-items: baseline;
+  margin-top: 26px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+.label { margin: 0; display: flex; align-items: baseline; gap: 14px; }
+.num {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: var(--chaouen);
+  font-variant-numeric: tabular-nums;
+}
+.name {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(2rem, 4.2vw, 2.9rem);
+  line-height: 1;
+}
+.haiku {
+  margin: 0;
+  font-size: 1.2rem;
+  line-height: 1.6;
+  font-style: italic;
+  color: #c9d1dc;
+}
+.haiku span { display: block; }
+.where {
+  margin: 18px 0 0;
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px;
+}
+.where .place {
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  color: var(--paper);
+  letter-spacing: 0.01em;
+}
+.where .when {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--chaouen);
+}
+.haiku span:nth-child(2) { padding-left: 1.4em; }
+.haiku span:nth-child(3) { padding-left: 0.7em; }
+
+@media (max-width: 640px) {
+  figcaption { grid-template-columns: 1fr; }
+  .frame img { max-height: none; }
+}
+
+footer {
+  border-top: 1px solid var(--line);
+  padding: 32px 0 56px;
+  font-family: var(--font-mono); font-size: 0.78rem; color: var(--mist);
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px;
+}
+footer a { color: var(--mist); }
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+/* A/B: A = haiku floating on the photo, B = haiku below */
+.pic { position: relative; display: block; max-width: 100%; background: var(--ink-raised); border-radius: 2px; }
+.pic img { display:block; width:100% !important; height:100% !important; max-height:none !important; object-fit: cover; }
+.ov { opacity: 0; transition: opacity .5s ease; }
+.pic.loaded .ov { opacity: 1; }
+@media (max-width: 640px) { .pic { width: 100% !important; } }
+.ov { position:absolute; left:0; right:0; bottom:0; padding: 22% 5% 4.5%; border-radius: 0 0 2px 2px;
+  background: linear-gradient(to bottom, rgba(8,12,20,0) 0%, rgba(8,12,20,.32) 50%, rgba(8,12,20,.58) 100%);
+  display:flex; justify-content:space-between; align-items:flex-end; gap: 16px; pointer-events:none; }
+.ov .h { font-family: var(--font-display); font-style: italic; color:rgba(255,255,255,.82); font-size: clamp(1.1rem, 3.2vw, 1.9rem); line-height:1.25; text-shadow: 0 1px 6px rgba(0,0,0,.35); }
+.ov .h span { display:block; }
+.ov .h span:nth-child(2) { padding-left: 1.2em; } .ov .h span:nth-child(3) { padding-left: .6em; }
+.ov .meta { font-family: var(--font-mono); font-size: clamp(.6rem,1.4vw,.75rem); letter-spacing:.06em; color:rgba(225,232,242,.7); margin-top:.8em; }
+.ov .tag { font-family: var(--font-display); font-style: italic; color:rgba(255,255,255,.78); font-size: clamp(1rem,2.6vw,1.5rem); white-space:nowrap; text-shadow: 0 1px 6px rgba(0,0,0,.35); }
+body.mode-b .ov { display:none; }
+body.mode-a figcaption { display:none; }
+
+/* navigation */
+.navbar { position: fixed; top: 12px; left: 12px; z-index: 30; display:flex; gap:8px; }
+.navbar a, .totop { font-family: var(--font-mono); font-size: .78rem; letter-spacing:.05em; color: var(--paper); text-decoration:none; background: rgba(13,19,28,.88); border:1px solid var(--line); border-radius:999px; padding: 9px 14px; backdrop-filter: blur(6px); }
+.navbar a:hover, .totop:hover { border-color: var(--chaouen); }
+.totop { position: fixed; right: 12px; bottom: 16px; z-index: 30; cursor:pointer; opacity:0; pointer-events:none; transition: opacity .3s; }
+.totop.show { opacity:1; pointer-events:auto; }
+.more-sets { margin: 72px 0 8px; border-top:1px solid var(--line); padding-top: 28px; }
+.more-sets h3 { font-family: var(--font-mono); font-weight:400; font-size:.8rem; letter-spacing:.12em; text-transform:uppercase; color: var(--mist); margin-bottom: 16px; }
+.more-sets a.next { display:block; border:1px solid var(--line); border-radius:10px; padding:20px 22px; color:inherit; text-decoration:none; }
+.more-sets a.next:hover { border-color: var(--chaouen); }
+.more-sets .t { font-family: var(--font-display); font-style:italic; font-size: clamp(1.8rem,4.5vw,2.6rem); display:block; }
+.more-sets .s { font-family: var(--font-mono); font-size:.8rem; color: var(--chaouen); display:block; margin-top:8px; }
+.more-sets .home { display:inline-block; margin-top:18px; font-family: var(--font-mono); font-size:.85rem; color: var(--paper); }
+</style>
+
+
+<style>
+.voteintro { margin-top: 18px; display:flex; flex-wrap:wrap; align-items:center; gap:10px; font-family: var(--font-mono); font-size: .8rem; color: var(--mist); }
+.voteintro input { font-family: var(--font-mono); font-size: .9rem; background: none; border: 1px solid var(--line); color: var(--paper); border-radius: 999px; padding: 9px 14px; width: 12em; }
+.voteintro input:focus { outline: none; border-color: var(--chaouen); }
+.voteintro input.need { border-color: #e0a85c; }
+.vbar { margin-top: 12px; display:flex; justify-content:space-between; align-items:center; gap:10px; }
+.vtoggle { font-family: var(--font-mono); font-size: .78rem; letter-spacing:.04em; color: var(--chaouen); background: none; border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; cursor: pointer; }
+.vtoggle[aria-expanded="true"] { background: rgba(111,156,240,.12); }
+.vlock { font-family: var(--font-mono); font-size: .78rem; color: var(--mist); }
+.vname { font-family: var(--font-mono); font-size: .75rem; color: var(--mist); }
+.opts { display:grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 10px; margin-top: 12px; }
+.opts[hidden] { display:none; }
+.opt { text-align:left; background: var(--ink-raised); color: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px 12px; cursor:pointer; font: inherit; }
+.opt .tagl { font-family: var(--font-mono); font-size: 11px; letter-spacing:.08em; color: var(--mist); display:block; margin-bottom: 8px; }
+.opt .hl { font-family: var(--font-display); font-style: italic; font-size: 18px; line-height: 1.35; }
+.opt .hl span { display:block; } .opt .hl span:nth-child(2) { padding-left: 1em; } .opt .hl span:nth-child(3) { padding-left: .5em; }
+.opt[aria-pressed="true"] { border-color: var(--chaouen); background: rgba(111,156,240,.12); }
+.opt[aria-pressed="true"] .tagl { color: var(--chaouen); }
+.opt[aria-pressed="true"] .tagl::after { content: "  ✓ your vote"; }
+.opt .tally { display:flex; align-items:center; gap:8px; margin-top:10px; font-family: var(--font-mono); font-size:11px; color: var(--mist); }
+.opt .tally i { flex:1; height:4px; background: var(--line); border-radius:2px; overflow:hidden; display:block; }
+.opt .tally i b { display:block; height:100%; width:0; background: var(--chaouen); transition: width .4s; }
+.opt .tally.top { color: var(--paper); }
+.toast { position: fixed; left: 50%; bottom: 70px; transform: translateX(-50%); background: var(--chaouen); color: #0d131c; font-family: var(--font-mono); font-size: 13px; padding: 8px 14px; border-radius: 999px; opacity: 0; transition: opacity .3s; pointer-events:none; z-index: 40; }
+.toast.show { opacity: 1; }
+</style>
+<style>.loading{font-family:var(--font-mono);color:var(--mist);padding:40px 0}</style>
+</head>
+<body class="mode-a">
+<nav class="navbar" aria-label="Site"><a id="home" href="/">← Haiku Kiko</a></nav>
+<button class="totop" type="button" aria-label="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑ Top</button>
+<div class="wrap">
+  <header class="masthead">
+    <p class="kicker" id="kicker"></p>
+    <h1 id="title"></h1>
+    <p class="intro" id="intro"></p>
+    <p class="voteintro"><span>Help choose the haiku — vote under any photo. Your name:</span><input id="vname" type="text" maxlength="60" placeholder="required to vote" aria-label="Your name (required to vote)" autocomplete="given-name"></p>
+  </header>
+  <nav class="index" aria-label="Photographs"><ol id="index"></ol></nav>
+  <main class="plates" id="plates"><p class="loading">Loading…</p></main>
+  <section class="more-sets" id="more" aria-label="More from Haiku Kiko" hidden></section>
+  <div class="toast" id="toast"></div>
+  <footer><span id="credit"></span><span id="count"></span></footer>
+</div>
+<script src="/hk.js"></script>
+<script>
+(async () => {
+  const { esc, pad } = HK; const slug = HK.slugFromPath();
+  document.getElementById("home").href = "/" + HK.q;
+  try {
+    const [S, set, photos, sets, styleRows, optRows] = await Promise.all([HK.settings(), HK.set(slug), HK.galleryPhotos(slug), HK.sets(), HK.styles(), HK.options(slug)]);
+    const STY = Object.fromEntries(styleRows.map(r => [r.code, r.name]));
+    const opts = {}; optRows.forEach(o => (opts[o.n] = opts[o.n] || []).push(o));
+    if (!set) { document.getElementById("plates").innerHTML = '<p class="loading">This set isn\'t published yet.</p>'; return; }
+    document.title = S.site_title + " · " + set.title + " " + (set.title_em || "");
+    document.getElementById("kicker").textContent = set.kicker || "";
+    document.getElementById("title").innerHTML = esc(set.title) + (set.title_em ? " <em>" + esc(set.title_em) + "</em>" : "");
+    document.getElementById("intro").textContent = set.intro || "";
+    document.getElementById("credit").textContent = `${S.site_title} · ${S.credit.replace(/\.$/, "")} · ${S.final_cut.replace(/\.$/, "")} · ${S.handle}`;
+    document.getElementById("count").textContent = photos.length + " photographs";
+    const index = document.getElementById("index"), plates = document.getElementById("plates"); plates.innerHTML = "";
+    for (const p of photos) {
+      const id = "photo-" + p.n;
+      const li = document.createElement("li"); li.innerHTML = `<a href="#${id}"><b>${pad(p.n)}</b>${esc(p.name)}</a>`; index.appendChild(li);
+      const fig = document.createElement("figure"); fig.className = "plate"; fig.id = id;
+      fig.innerHTML = `<div class="frame"><div class="pic" style="aspect-ratio:${p.w}/${p.h};width:min(100%, calc(86vh * ${p.w} / ${p.h}))">
+        <img src="${esc(set.img_base + p.img)}" width="${p.w}" height="${p.h}" alt="${esc(p.alt)}" loading="${p.n <= 2 ? "eager" : "lazy"}" decoding="async">
+        <div class="ov" aria-hidden="true"><div><div class="h">${p.haiku.map(l => "<span>" + esc(l) + "</span>").join("")}</div><div class="meta">${pad(p.n)} · ${esc(p.name)} — ${esc(set.place)} · ${esc(set.date_short)}</div></div><div class="tag">${esc(S.handle)}</div></div>
+      </div></div>
+      <figcaption class="sr-only">${pad(p.n)} ${esc(p.name)}. ${esc(p.haiku.join(" / "))}. ${esc(set.place)}, ${esc(set.date_label)}${p.time_label ? ", " + esc(p.time_label) : ""}.</figcaption>
+      <div class="vbar">${p.locked ? '<span class="vlock">🔒 Final haiku</span>' : `<button class="vtoggle" type="button" aria-expanded="false">${(opts[p.n] || []).length} versions · vote ▾</button>`}<span class="vname">${pad(p.n)} · ${esc(p.name)}</span></div>
+      <div class="opts" hidden></div>`;
+      const img = fig.querySelector("img"), pic = fig.querySelector(".pic"), shown = () => pic.classList.add("loaded");
+      if (img.complete && img.naturalWidth) shown(); else img.addEventListener("load", shown, { once: true });
+      const tg = fig.querySelector(".vtoggle"), box = fig.querySelector(".opts");
+      if (tg) {
+        box.innerHTML = (opts[p.n] || []).map(o => `<button type="button" class="opt" data-n="${p.n}" data-k="${o.style}"><span class="tagl">${o.style} · ${esc(STY[o.style] || "")}</span><span class="hl">${o.lines.map(l => "<span>" + esc(l) + "</span>").join("")}</span><span class="tally"><i><b></b></i><span class="c">0 votes</span></span></button>`).join("");
+        tg.onclick = () => { const open = box.hidden; box.hidden = !open; tg.setAttribute("aria-expanded", open); };
+        box.querySelectorAll(".opt").forEach(b => b.onclick = () => vote(p.n, b.dataset.k, fig));
+      }
+      plates.appendChild(fig);
+    }
+    // voting
+    const KEYV = "hk-votes-" + slug; let mine = {}; try { mine = JSON.parse(localStorage.getItem(KEYV) || "{}"); } catch (e) {}
+    let voter = null; try { voter = localStorage.getItem("hk-voter"); } catch (e) {}
+    if (!voter) { voter = crypto.randomUUID ? crypto.randomUUID() : "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c => (c ^ Math.random() * 16 >> c / 4).toString(16)); try { localStorage.setItem("hk-voter", voter); } catch (e) {} }
+    const nameEl = document.getElementById("vname"); try { nameEl.value = localStorage.getItem("hk-name") || ""; } catch (e) {}
+    nameEl.addEventListener("input", () => { nameEl.classList.remove("need"); try { localStorage.setItem("hk-name", nameEl.value.trim()); } catch (e) {} });
+    const toast = t => { const el = document.getElementById("toast"); el.textContent = t; el.classList.add("show"); setTimeout(() => el.classList.remove("show"), 2400); };
+    const mark = () => document.querySelectorAll(".opt").forEach(b => b.setAttribute("aria-pressed", mine[b.dataset.n] === b.dataset.k));
+    async function tallies() {
+      try {
+        const rows = await HK.rpc("lab_tallies", { p_set: slug }); const by = {};
+        rows.forEach(x => { (by[x.photo] = by[x.photo] || {})[x.style] = x.votes; });
+        document.querySelectorAll(".opt").forEach(b => {
+          const m = by[b.dataset.n] || {}, v = m[b.dataset.k] || 0, tot = Object.values(m).reduce((a, c) => a + c, 0), max = Math.max(0, ...Object.values(m));
+          b.querySelector(".tally b").style.width = tot ? (100 * v / tot) + "%" : "0";
+          b.querySelector(".c").textContent = v + (v === 1 ? " vote" : " votes");
+          b.querySelector(".tally").classList.toggle("top", v > 0 && v === max);
+        });
+      } catch (e) {}
+    }
+    async function vote(n, k, fig) {
+      const name = nameEl.value.trim();
+      if (!name) { nameEl.classList.add("need"); nameEl.scrollIntoView({ behavior: "smooth", block: "center" }); nameEl.focus({ preventScroll: true }); toast("Add your name first, then vote"); return; }
+      try {
+        await HK.rpc("cast_vote", { p_set: slug, p_photo: n, p_style: k, p_voter: voter, p_name: name });
+        mine[n] = k; try { localStorage.setItem(KEYV, JSON.stringify(mine)); } catch (e) {} mark(); toast("Thanks, " + name + " — vote saved");
+        await tallies();
+        const fresh = (await HK.galleryPhotos(slug)).find(x => x.n === n);
+        if (fresh) fig.querySelector(".ov .h").innerHTML = fresh.haiku.map(l => "<span>" + esc(l) + "</span>").join("");
+      } catch (e) { toast("Couldn't save your vote — try again"); }
+    }
+    mark(); tallies();
+    const others = sets.filter(s => s.slug !== slug);
+    if (others.length) {
+      const more = document.getElementById("more"); more.hidden = false;
+      more.innerHTML = '<h3>Next from Haiku Kiko</h3>' + others.slice(0, 2).map(o => `<a class="next" href="/${esc(o.slug)}/${HK.q}" style="margin-bottom:10px"><span class="t">${esc(o.title)} ${esc(o.title_em || "")} →</span><span class="s">${esc(o.date_label)}</span></a>`).join("") + `<a class="home" href="/${HK.q}">← All sets on Haiku Kiko</a>`;
+    }
+  } catch (e) { document.getElementById("plates").innerHTML = '<p class="loading">Couldn\'t load the photographs. Please try again in a moment.</p>'; }
+  const tt = document.querySelector(".totop"); addEventListener("scroll", () => tt.classList.toggle("show", scrollY > 900), { passive: true });
+})();
+</script>
+</body>
+</html>

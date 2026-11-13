@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Haiku Kiko · 俳句紀行</title>
+<meta name="description" content="Haiku Kiko: travel photographs by Gregory, haiku by Claudio. One walk, one picture, three lines.">
+<meta property="og:title" content="Haiku Kiko · 俳句紀行">
+<meta property="og:description" content="Photographs by Gregory, haiku by Claudio.">
+<meta property="og:image" content="/thumbs/chefchaouen-11.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  :root { --ink:#0d131c; --paper:#e8ecf2; --mist:#8b97a8; --line:#243041; --chaouen:#6f9cf0; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--ink); color:var(--paper); font-family:'Instrument Serif', Georgia, serif; }
+  .wrap { max-width:880px; margin:0 auto; padding:72px 22px 48px; }
+  .kicker { font-family:'DM Mono', monospace; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--mist); }
+  h1 { font-weight:400; font-size:clamp(52px,11vw,104px); line-height:.95; margin:14px 0 18px; }
+  h1 em { color:var(--chaouen); }
+  .lede { font-style:italic; font-size:clamp(20px,3.4vw,26px); color:#c9d1dc; line-height:1.4; }
+
+  .sets { margin-top:56px; display:grid; gap:28px; }
+  a.set { display:block; color:inherit; text-decoration:none; border:1px solid var(--line); border-radius:10px; padding:22px; background:rgba(255,255,255,.02); transition:border-color .2s, background .2s; }
+  a.set:hover { border-color:var(--chaouen); background:rgba(111,156,240,.06); }
+  .top { display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap; }
+  .set .when { font-family:'DM Mono', monospace; font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--chaouen); }
+  .set h2 { font-weight:400; font-style:italic; font-size:clamp(30px,5.4vw,46px); line-height:1.05; margin-top:8px; }
+  .count { font-family:'DM Mono', monospace; font-size:13px; color:var(--paper); border:1px solid var(--line); border-radius:999px; padding:6px 12px; white-space:nowrap; }
+  .strip { display:grid; grid-template-columns:repeat(6,1fr); gap:6px; margin-top:18px; }
+  .strip img { width:100%; height:auto; aspect-ratio:1; object-fit:cover; border-radius:4px; display:block; }
+  .strip .more { display:grid; place-items:center; aspect-ratio:1; border-radius:4px; background:#1a2433; font-family:'DM Mono', monospace; font-size:clamp(14px,3vw,20px); color:var(--paper); }
+  .go { display:inline-block; margin-top:16px; font-family:'DM Mono', monospace; font-size:13px; letter-spacing:.06em; color:var(--chaouen); }
+  footer { margin-top:72px; border-top:1px solid var(--line); padding-top:24px; font-family:'DM Mono', monospace; font-size:12px; color:var(--mist); display:flex; flex-wrap:wrap; gap:12px; justify-content:space-between; }
+  footer a { color:var(--mist); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="kicker" id="kicker">俳句紀行 · a haiku travel journal</p>
+  <h1>Haiku <em>Kiko</em></h1>
+  <p class="lede" id="lede"></p>
+  <section class="sets" id="sets"><p class="when">Loading…</p></section>
+  <footer><span id="handle"></span><a id="email" href="#"></a></footer>
+</div>
+<script src="/hk.js"></script>
+<script>
+(async () => {
+  const { esc, pad } = HK;
+  try {
+    const [S, sets] = await Promise.all([HK.settings(), HK.sets()]);
+    document.getElementById("kicker").textContent = S.kicker;
+    document.getElementById("lede").innerHTML = esc(S.credit) + "<br>" + esc(S.final_cut);
+    document.getElementById("handle").innerHTML = esc(S.site_title) + ' · <a href="' + esc(S.instagram) + '">' + esc(S.handle) + '</a>';
+    const em = document.getElementById("email"); em.textContent = S.email; em.href = "mailto:" + S.email;
+    const out = [];
+    const allPh = await Promise.all(sets.map(s => HK.photos(s.slug)));
+    for (const [i, s] of sets.entries()) {
+      const ph = allPh[i];
+      const cover = ph.find(p => p.n === s.cover_photo);
+      const pick = (cover ? [cover] : []).concat(ph.filter(p => p !== cover)).slice(0, 5);
+      const th = pick.map(p => `<img src="/thumbs/${esc(s.slug)}-${pad(p.n)}.jpg" alt="" width="160" height="160" loading="lazy">`).join("");
+      out.push(`<a class="set" href="/${esc(s.slug)}/${HK.q}"><div class="top"><div><p class="when">${esc(s.place.split(", ").pop())} · ${esc(s.date_label.replace(/^\w+ /, ""))}${s.status === "draft" ? " · DRAFT" : ""}</p><h2>${esc(s.title)} ${esc(s.title_em || "")}</h2></div><span class="count">${ph.length} photographs</span></div><div class="strip">${th}${ph.length > 5 ? `<span class="more">+${ph.length - 5}</span>` : ""}</div><span class="go">Open the set →</span></a>`);
+    }
+    document.getElementById("sets").innerHTML = out.join("");
+  } catch (e) { document.getElementById("sets").innerHTML = '<p class="when">Couldn\'t load the sets — please try again in a moment.</p>'; }
+})();
+</script>
+</body>
+</html>
