@@ -6,3 +6,4 @@ wrangler.jsonc
 .wrangler
 version.json
 scripts
+supabase

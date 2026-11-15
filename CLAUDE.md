@@ -110,6 +110,24 @@ Instagram/X get the haiku **baked into** the image (soft watermark: haiku, `NN �
 WM_PLATES=plates.json python3 scripts/wm.py <photos> <out> <fonts>`). Fonts: Instrument Serif from the
 google/fonts GitHub repo (OFL). The website itself uses live CSS overlays, not baked images.
 
+## Social bot (built 15 Nov 2026)
+
+All in Supabase. **pg_cron** job `social-post` runs every 10 min → edge function `social-post`
+(source: `supabase/functions/social-post/index.ts`, deployed with `verify_jwt=false`; it checks the
+`x-cron-secret` header against `social_config.cron_secret`).
+
+| Object | What |
+|---|---|
+| `social_queue` | One row per post: `pos` (order), image_url (`/social/<slug>-NN.jpg`), caption_ig, caption_x, status queued/posting/posted/failed/held, ig_id, x_id, error. Reorder by editing `pos`; skip with status `held`. |
+| `social_config` | One row: **`live`** (false = dry run, nothing posts), `platforms` (`{instagram}` / `{instagram,x}`), tz `Africa/Casablanca`, posting hours 8–22. |
+| `social_secrets` | ig_user_id, ig_access_token (auto-refreshed after 30 days), x_api_key/secret, x_access_token/secret. RLS, no policies. Gregory pastes these himself. |
+| `social_interval(remaining)` | Pacing: ≥15 queued → 1 h, 8–14 → 3 h, 4–7 → 8 h, 1–3 → 24 h. |
+| `social_forecast()` | Projected post times for everything queued. |
+
+Images: `social/<slug>-NN.jpg` made by `scripts/wm.py` from the **winning haiku at queue time** (crops to
+Instagram's 4:5…1.91:1). If a vote changes a winner before it posts, re-render that image and update its captions.
+Instagram needs the image on **haikukiko.com** (prod), so new social images must be shipped before they post.
+
 ## Accounts & names (no secrets here)
 
 - Domain haikukiko.com on Cloudflare (also Email Routing: hello@haikukiko.com → Gregory's main Gmail;
@@ -122,6 +140,5 @@ google/fonts GitHub repo (OFL). The website itself uses live CSS overlays, not b
 
 - Mosque chanting audio → "listen while you look" button + mosque name (waiting for a trimmed clip).
 - Bios: one for Claudio, one for Gregory (Gregory to brief).
-- Haiku bot: scheduled posting to Instagram/X with adaptive pacing (Instagram is a Creator account now).
 - Move repos to Gregory's old GitHub account.
 - 11 Nov first-pass rejects awaiting Gregory's OK; day-two picks still open to votes.

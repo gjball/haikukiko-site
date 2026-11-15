@@ -41,12 +41,20 @@ def width(font, text):
 for p in PLATES:
     im = ImageOps.exif_transpose(Image.open(os.path.join(PHOTOS, p.get("file") or p["src"]))).convert("RGB")
     im.thumbnail((LONG_EDGE, LONG_EDGE), Image.LANCZOS)
+    # Instagram only accepts 4:5 (portrait) to 1.91:1 (landscape): centre-crop anything outside that
+    r = im.width / im.height
+    if r < 0.8:
+        h = int(im.width / 0.8)
+        im = im.crop((0, (im.height - h) // 2, im.width, (im.height - h) // 2 + h))
+    elif r > 1.91:
+        w = int(im.height * 1.91)
+        im = im.crop(((im.width - w) // 2, 0, (im.width - w) // 2 + w, im.height))
     W, H = im.size
     base = (W * H) ** 0.5  # same visual weight on landscape, square and portrait
     m = int(base * 0.045)
 
     hs = int(base * 0.037)
-    caption = f"{p['n']} · {p['name']}  —  Chefchaouen, Morocco · {DATE}"
+    caption = f"{p['n']} · {p['name']}  —  {p.get('place', 'Chefchaouen, Morocco')} · {p.get('date', DATE)}"
     cs = int(base * 0.022)
     hand = int(base * 0.050)
     # Shrink haiku if its longest line would run past ~70% of the width
@@ -81,6 +89,6 @@ for p in PLATES:
     items.append((hand_xy, "@haikukiko", fhand, (255, 255, 255, TEXT_A)))
     canvas = Image.alpha_composite(canvas, text_layer(canvas.size, items))
 
-    name = f"{p['n']:02d}_{p['name'].lower().replace(' ', '-')}_haikukiko.jpg"
+    name = p.get("out") or f"{p['n']:02d}_{p['name'].lower().replace(' ', '-')}_haikukiko.jpg"
     canvas.convert("RGB").save(os.path.join(OUT, name), quality=90, optimize=True)
     print(name, W, H)
