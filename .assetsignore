@@ -1,6 +1,8 @@
 README.md
+CLAUDE.md
 wrangler.jsonc
 .git
 .assetsignore
 .wrangler
 version.json
+scripts
