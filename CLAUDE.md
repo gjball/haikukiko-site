@@ -119,7 +119,7 @@ All in Supabase. **pg_cron** job `social-post` runs every 10 min → edge functi
 | Object | What |
 |---|---|
 | `social_queue` | One row per post: `pos` (order), image_url (`/social/<slug>-NN.jpg`), caption_ig, caption_x, status queued/posting/posted/failed/held, ig_id, x_id, error. Reorder by editing `pos`; skip with status `held`. |
-| `social_config` | One row: **`live`** (false = dry run, nothing posts), `platforms` (`{instagram}` / `{instagram,x}`), tz `Africa/Casablanca`, posting hours 8–22. |
+| `social_config` | One row: **`live`** (false = dry run, nothing posts), `platforms` (`{instagram}` / `{instagram,x}`), tz `America/Los_Angeles`, posting hours 8:00–midnight California time. |
 | `social_secrets` | ig_user_id, ig_access_token (auto-refreshed after 30 days), x_api_key/secret, x_access_token/secret. RLS, no policies. Gregory pastes these himself. |
 | `social_interval(remaining)` | Pacing: ≥15 queued → 1 h, 8–14 → 3 h, 4–7 → 8 h, 1–3 → 24 h. |
 | `social_forecast()` | Projected post times for everything queued. |
